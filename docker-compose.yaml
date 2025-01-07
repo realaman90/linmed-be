@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16.1
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: linmed
+      POSTGRES_PASSWORD: linmed
+      POSTGRES_DB: linmed_db
+    ports: 
+    - 5432:5432
+    networks: 
+    - app-network
+    volumes:
+    - ./data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d linmed_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: golang_app
+    volumes:
+      - ./src:/usr/src/app/src
+    ports:
+      - "${API_PORT:-8080}:8080"
+    env_file:
+      - .env
+    depends_on:
+        postgres:
+          condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+        test: ["CMD", "curl", "-f", "http://api:8080/health"]
+        interval: 10s
+        timeout: 5s
+        retries: 5
+        start_period: 5s
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+    name: ${NETWORK_NAME:-linmed-network}
+        
+
+volumes:
+  postgres_data:
+    name: ${POSTGRES_VOLUME:-linmed-postgres-data}
