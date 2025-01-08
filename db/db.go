@@ -28,7 +28,7 @@ func New(ctx context.Context, dbUrl string) (*Database, error) {
 func (db *Database) CreateTabels(ctx context.Context) error {
 
 	_, err := db.Conn.Exec(ctx,
-		`CREATE TABLE categories (
+		`CREATE TABLE IF NOT EXISTS categories (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(100) NOT NULL UNIQUE,
 			created_at TIMESTAMP DEFAULT NOW(),

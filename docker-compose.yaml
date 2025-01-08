@@ -13,9 +13,10 @@ services:
     networks: 
     - app-network
     volumes:
-    - ./data:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d linmed_db"]
+      test: ["CMD-SHELL", "pg_isready -U linmed"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -27,7 +28,7 @@ services:
       dockerfile: Dockerfile
     container_name: golang_app
     volumes:
-      - ./src:/usr/src/app/src
+      - .:/app
     ports:
       - "${API_PORT:-8080}:8080"
     env_file:
@@ -43,7 +44,7 @@ services:
         timeout: 5s
         retries: 5
         start_period: 5s
-    restart: unless-stopped
+    restart: on-failure
 
 networks:
   app-network:

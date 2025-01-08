@@ -29,7 +29,19 @@ func New(
 
 func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/", s.HealthCheck).Methods("GET")
-	r.HandleFunc("/api/v1", s.AddUser).Methods("GET")
+	r.HandleFunc("/api/v1/user", s.AddUser).Methods("POST")
+	r.HandleFunc("/api/v1/user/{id}", s.GetUser).Methods("GET")
+	r.HandleFunc("/api/v1/user/{id}", s.UpdateUser).Methods("PUT")
+
+	r.HandleFunc("/api/v1/category", s.AddCategory).Methods("POST")
+	r.HandleFunc("/api/v1/category/{id}", s.GetCategories).Methods("GET")
+
+	// r.HandleFunc("/api/v1/product", s.AddProduct).Methods("POST")
+	// r.HandleFunc("/api/v1/product/{id}", s.GetProduct).Methods("GET")
+	// r.HandleFunc("/api/v1/product/{id}", s.UpdateProduct).Methods("PUT")
+	// r.HandleFunc("/api/v1/product/{id}", s.DeleteProduct).Methods("DELETE")
+	// r.HandleFunc("/api/v1/product", s.GetProducts).Methods("GET")
+
 }
 
 func (s *Server) Start() {
