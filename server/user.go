@@ -36,8 +36,16 @@ func (s *Server) AddUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := struct {
+		Id      uint   `json:"id"`
+		Message string `json:"message"`
+	}{
+		Id:      user.ID,
+		Message: "User added successfully",
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, "User added successfully")
+	writeJSONResponse(w, http.StatusOK, res)
 }
 
 func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {

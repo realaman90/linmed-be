@@ -29,6 +29,7 @@ func New(
 
 func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/", s.HealthCheck).Methods("GET")
+
 	r.HandleFunc("/api/v1/user", s.AddUser).Methods("POST")
 	r.HandleFunc("/api/v1/user/{id}", s.GetUser).Methods("GET")
 	r.HandleFunc("/api/v1/user/{id}", s.UpdateUser).Methods("PUT")
@@ -48,6 +49,7 @@ func (s *Server) Start() {
 	r := mux.NewRouter()
 
 	s.RegisterRoutes(r)
+	s.corsMiddleware(r)
 
 	http.Handle("/", r)
 	s.Logger.Info("Starting server on port: ", s.Config.ServerPort)
