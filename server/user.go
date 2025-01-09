@@ -115,4 +115,19 @@ func (s *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, http.StatusOK, "User updated successfully")
 }
 
-// delete user
+// get users
+
+func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
+
+	// Get the users from the db
+	users, err := s.db.GetUsers(ctx)
+	if err != nil {
+		s.Logger.Error("Failed to get users from db: ", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// return the users
+	writeJSONResponse(w, http.StatusOK, users)
+}

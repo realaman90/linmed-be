@@ -50,3 +50,27 @@ func (db *Database) UpdateUser(ctx context.Context, ID string, user models.User)
 
 	return nil
 }
+
+func (db *Database) GetUsers(ctx context.Context) ([]models.User, error) {
+	var users []models.User
+
+	rows, err := db.Conn.Query(ctx,
+		`SELECT id, username, email, first_name, last_name, created_at, updated_at
+		FROM users;`,
+	)
+	if err != nil {
+		return users, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user models.User
+		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return users, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
