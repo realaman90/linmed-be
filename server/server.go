@@ -41,13 +41,19 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/users", s.GetUsers).Methods("GET")
 
 	r.HandleFunc("/api/v1/category", s.AddCategory).Methods("POST")
-	r.HandleFunc("/api/v1/category/{id}", s.GetCategories).Methods("GET")
+	r.HandleFunc("/api/v1/category", s.GetCategories).Methods("GET")
 
-	// r.HandleFunc("/api/v1/product", s.AddProduct).Methods("POST")
-	// r.HandleFunc("/api/v1/product/{id}", s.GetProduct).Methods("GET")
-	// r.HandleFunc("/api/v1/product/{id}", s.UpdateProduct).Methods("PUT")
-	// r.HandleFunc("/api/v1/product/{id}", s.DeleteProduct).Methods("DELETE")
-	// r.HandleFunc("/api/v1/product", s.GetProducts).Methods("GET")
+	r.HandleFunc("/api/v1/product", s.AddProduct).Methods("POST")
+	r.HandleFunc("/api/v1/product/{id}", s.GetProduct).Methods("GET")
+	r.HandleFunc("/api/v1/product/{id}", s.UpdateProduct).Methods("PUT")
+	r.HandleFunc("/api/v1/product/{id}", s.DeleteProduct).Methods("DELETE")
+	r.HandleFunc("/api/v1/product", s.GetProducts).Methods("GET")
+
+	r.HandleFunc("/api/v1/customer", s.AddCustomer).Methods("POST")
+	r.HandleFunc("/api/v1/customer/{id}", s.GetCustomer).Methods("GET")
+	r.HandleFunc("/api/v1/customer/{id}", s.UpdateCustomer).Methods("PUT")
+	r.HandleFunc("/api/v1/customers", s.GetCustomers).Methods("GET")
+
 }
 
 func (s *Server) Start() {

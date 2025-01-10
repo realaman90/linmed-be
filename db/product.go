@@ -9,8 +9,8 @@ import (
 func (db *Database) AddCategory(ctx context.Context, category models.Category) error {
 
 	_, err := db.Conn.Exec(ctx,
-		`INSERT INTO categories (name, created_at, updated_at)
-		VALUES ($1, $2);`,
+		`INSERT INTO categories (name)
+		VALUES ($1);`,
 		category.Name,
 	)
 	if err != nil {
@@ -57,4 +57,111 @@ func (db *Database) GetCategories(ctx context.Context) ([]models.Category, error
 	}
 
 	return categories, nil
+}
+
+func (db *Database) AddProduct(ctx context.Context, product models.Product) (uint, error) {
+
+	// return id of the product
+
+	var id uint
+
+	err := db.Conn.QueryRow(ctx,
+		`INSERT INTO products (name, category_id, price, description, image_url, parent_id, coverage_amount, age_limit, children)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING id;`,
+		product.Name,
+		product.CategoryID,
+		product.Price,
+		product.Description,
+		product.ImageURL,
+		product.ParentID,
+		product.CoverageAmount,
+		product.AgeLimit,
+		product.Children,
+	).Scan(&id)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+
+}
+
+func (db *Database) GetProduct(ctx context.Context, id string) (models.Product, error) {
+
+	var product models.Product
+
+	err := db.Conn.QueryRow(ctx,
+		`SELECT id, name, category_id, price, description, image_url, parent_id, coverage_amount, age_limit, children, created_at, updated_at
+		FROM products
+		WHERE id = $1;`,
+		id,
+	).Scan(&product.ID, &product.Name, &product.CategoryID, &product.Price, &product.Description, &product.ImageURL, &product.ParentID, &product.CoverageAmount, &product.AgeLimit, &product.Children, &product.CreatedAt, &product.UpdatedAt)
+	if err != nil {
+		return product, err
+	}
+
+	return product, nil
+}
+
+func (db *Database) GetProducts(ctx context.Context) ([]models.Product, error) {
+	var products []models.Product
+
+	rows, err := db.Conn.Query(ctx,
+		`SELECT id, name, category_id, price, description, image_url, parent_id, coverage_amount, age_limit, children, created_at, updated_at
+		FROM products;`,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var product models.Product
+		if err := rows.Scan(&product.ID, &product.Name, &product.CategoryID, &product.Price, &product.Description, &product.ImageURL, &product.ParentID, &product.CoverageAmount, &product.AgeLimit, &product.Children, &product.CreatedAt, &product.UpdatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, product)
+	}
+
+	return products, nil
+}
+
+func (db *Database) UpdateProduct(ctx context.Context, product models.Product) error {
+
+	_, err := db.Conn.Exec(ctx,
+		`UPDATE products
+		SET name = $1, category_id = $2, price = $3, description = $4, image_url = $5, parent_id = $6, coverage_amount = $7, age_limit = $8, children = $9
+		WHERE id = $10;`,
+		product.Name,
+		product.CategoryID,
+		product.Price,
+		product.Description,
+		product.ImageURL,
+		product.ParentID,
+		product.CoverageAmount,
+		product.AgeLimit,
+		product.Children,
+		product.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteProduct(ctx context.Context, id string) error {
+
+	_, err := db.Conn.Exec(ctx,
+		`DELETE FROM products
+		WHERE id = $1;`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

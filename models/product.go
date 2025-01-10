@@ -23,7 +23,6 @@ type Product struct {
 	Description    string    `gorm:"type:text" json:"description" validate:"required"`
 	ImageURL       string    `gorm:"type:text" json:"image_url" validate:"omitempty,url"`
 	ParentID       *uint     `gorm:"index" json:"parent_id" validate:"omitempty"`
-	Parent         *Product  `gorm:"foreignKey:ParentID" json:"parent" validate:"omitempty"`
 	Price          float64   `gorm:"not null" json:"price" validate:"required"`
 	CoverageAmount *float64  `json:"coverage_amount" validate:"omitempty"`
 	AgeLimit       *int      `json:"age_limit" validate:"omitempty"`
