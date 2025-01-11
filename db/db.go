@@ -31,6 +31,7 @@ func (db *Database) CreateTabels(ctx context.Context) error {
 		`CREATE TABLE IF NOT EXISTS categories (
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(100) NOT NULL UNIQUE,
+			description TEXT,
 			created_at TIMESTAMP DEFAULT NOW(),
 			updated_at TIMESTAMP DEFAULT NOW()
 		);

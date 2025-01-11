@@ -6,18 +6,24 @@ import (
 	"github.com/aakash-tyagi/linmed/models"
 )
 
-func (db *Database) AddCategory(ctx context.Context, category models.Category) error {
+func (db *Database) AddCategory(ctx context.Context, category models.Category) (int, error) {
 
-	_, err := db.Conn.Exec(ctx,
-		`INSERT INTO categories (name)
-		VALUES ($1);`,
+	// return id of the category
+
+	var id int
+
+	err := db.Conn.QueryRow(ctx,
+		`INSERT INTO categories (name, description)
+		VALUES ($1, $2)
+		RETURNING id;`,
 		category.Name,
-	)
+		category.Description,
+	).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (db *Database) GetCategory(ctx context.Context, id string) (models.Category, error) {
@@ -105,27 +111,32 @@ func (db *Database) GetProduct(ctx context.Context, id string) (models.Product, 
 	return product, nil
 }
 
-func (db *Database) GetProducts(ctx context.Context) ([]models.Product, error) {
+func (db *Database) GetProducts(ctx context.Context, page, limit int) ([]models.Product, int, error) {
 	var products []models.Product
 
+	// get category name also with product
+
 	rows, err := db.Conn.Query(ctx,
-		`SELECT id, name, category_id, price, description, image_url, parent_id, coverage_amount, age_limit, children, created_at, updated_at
-		FROM products;`,
+		`SELECT p.id, p.name, p.category_id, p.price, p.description, p.image_url, p.parent_id, p.coverage_amount, p.age_limit, p.children, p.created_at, p.updated_at, c.name
+		FROM products p
+		INNER JOIN categories c ON p.category_id = c.id
+		LIMIT $1 OFFSET $2;`,
+		limit, page,
 	)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var product models.Product
-		if err := rows.Scan(&product.ID, &product.Name, &product.CategoryID, &product.Price, &product.Description, &product.ImageURL, &product.ParentID, &product.CoverageAmount, &product.AgeLimit, &product.Children, &product.CreatedAt, &product.UpdatedAt); err != nil {
-			return nil, err
+		if err := rows.Scan(&product.ID, &product.Name, &product.CategoryID, &product.Price, &product.Description, &product.ImageURL, &product.ParentID, &product.CoverageAmount, &product.AgeLimit, &product.Children, &product.CreatedAt, &product.UpdatedAt, &product.CategoryName); err != nil {
+			return nil, 0, err
 		}
 		products = append(products, product)
 	}
 
-	return products, nil
+	return products, len(products), nil
 }
 
 func (db *Database) UpdateProduct(ctx context.Context, product models.Product) error {

@@ -18,26 +18,32 @@ func (s *Server) AddCategory(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the request body into the category struct
 	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
 		s.Logger.Error("Failed to decode request body: ", err)
-		writeJSONResponse(w, http.StatusBadRequest, err)
+		errorResposne(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// validate category
 	if err := category.Validate(); err != nil {
 		s.Logger.Error("Failed to validate category: ", err)
-		writeJSONResponse(w, http.StatusBadRequest, err)
+		errorResposne(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// save to db
-	if err := s.db.AddCategory(ctx, category); err != nil {
+	id, err := s.db.AddCategory(ctx, category)
+	if err != nil {
 		s.Logger.Error("Failed to save category to db: ", err)
-		writeJSONResponse(w, http.StatusInternalServerError, err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	res := map[string]interface{}{
+		"id":      id,
+		"message": "Category added successfully",
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, "Category added successfully")
+	writeJSONResponse(w, http.StatusOK, res)
 }
 
 func (s *Server) GetCategories(w http.ResponseWriter, r *http.Request) {
@@ -49,12 +55,17 @@ func (s *Server) GetCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := s.db.GetCategories(ctx)
 	if err != nil {
 		s.Logger.Error("Failed to get categories from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	res := paginatedResponse{
+		Total: len(categories),
+		Data:  categories,
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, categories)
+	writeJSONResponse(w, http.StatusOK, res)
 }
 
 func (s *Server) AddProduct(w http.ResponseWriter, r *http.Request) {
@@ -66,14 +77,14 @@ func (s *Server) AddProduct(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the request body into the product struct
 	if err := json.NewDecoder(r.Body).Decode(&product); err != nil {
 		s.Logger.Error("Failed to decode request body: ", err)
-		writeJSONResponse(w, http.StatusBadRequest, err)
+		errorResposne(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// validate product
 	if err := product.Validate(); err != nil {
 		s.Logger.Error("Failed to validate product: ", err)
-		writeJSONResponse(w, http.StatusBadRequest, err)
+		errorResposne(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -81,7 +92,7 @@ func (s *Server) AddProduct(w http.ResponseWriter, r *http.Request) {
 	id, err := s.db.AddProduct(ctx, product)
 	if err != nil {
 		s.Logger.Error("Failed to save product to db: ", err)
-		writeJSONResponse(w, http.StatusInternalServerError, err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -111,7 +122,7 @@ func (s *Server) GetProduct(w http.ResponseWriter, r *http.Request) {
 	product, err := s.db.GetProduct(ctx, id)
 	if err != nil {
 		s.Logger.Error("Failed to get product from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -123,17 +134,28 @@ func (s *Server) GetProducts(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.TODO()
 
+	page := r.URL.Query().Get("page")
+	limit := r.URL.Query().Get("limit")
+
+	// validate page and limit query parameters
+	pageInt, limitInt := s.validatePageLimit(page, limit)
+
 	// Get all products from the db
 
-	products, err := s.db.GetProducts(ctx)
+	products, totalProducts, err := s.db.GetProducts(ctx, pageInt, limitInt)
 	if err != nil {
 		s.Logger.Error("Failed to get products from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	res := paginatedResponse{
+		Total: totalProducts,
+		Data:  products,
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, products)
+	writeJSONResponse(w, http.StatusOK, res)
 }
 
 func (s *Server) UpdateProduct(w http.ResponseWriter, r *http.Request) {
@@ -172,8 +194,13 @@ func (s *Server) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	res := map[string]interface{}{
+		"id":      id,
+		"message": "Product updated successfully",
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, "Product updated successfully")
+	writeJSONResponse(w, http.StatusOK, res)
 }
 
 func (s *Server) DeleteProduct(w http.ResponseWriter, r *http.Request) {
@@ -192,10 +219,15 @@ func (s *Server) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// delete product from db
 	if err := s.db.DeleteProduct(ctx, id); err != nil {
 		s.Logger.Error("Failed to delete product from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	res := map[string]interface{}{
+		"id":      id,
+		"message": "Product deleted successfully",
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, "Product deleted successfully")
+	writeJSONResponse(w, http.StatusOK, res)
 }

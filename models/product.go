@@ -7,10 +7,11 @@ import (
 // Product Model
 
 type Category struct {
-	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name      string    `gorm:"size:100;not null" json:"name" validate:"required"`
-	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name        string    `gorm:"size:100;not null" json:"name" validate:"required"`
+	Description string    `gorm:"type:text" json:"description" validate:"required"`
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 func (c *Category) Validate() error {
@@ -30,6 +31,7 @@ type Product struct {
 	UpdatedAt      time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	Children       []Product `gorm:"foreignKey:ParentID" json:"children" validate:"omitempty"`
 	CategoryID     *uint     `gorm:"index" json:"category_id" validate:"required"`
+	CategoryName   string    `gorm:"-" json:"category_name"`
 }
 
 func (p *Product) Validate() error {

@@ -6,29 +6,43 @@ import (
 	"github.com/aakash-tyagi/linmed/models"
 )
 
-func (db *Database) AddUser(ctx context.Context, user models.User) error {
+func (db *Database) AddUser(ctx context.Context, user models.User) (uint, error) {
 
-	_, err := db.Conn.Exec(ctx,
-		`INSERT INTO users (username, email, password_hash, first_name, last_name)
-		VALUES ($1, $2, $3, $4, $5);`,
-		user.Username, user.Email, user.PasswordHash, user.FirstName, user.LastName,
-	)
+	var id uint
+
+	err := db.Conn.QueryRow(ctx,
+		`INSERT INTO users (
+		username,
+		email,
+		first_name,
+		last_name, 
+		phone_number,
+		is_active,
+		last_login,
+		password_hash,
+		role,
+		created_at,
+		updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		RETURNING id;`,
+		user.Username, user.Email, user.FirstName, user.LastName, user.PhoneNumber, user.IsActive, user.LastLogin, user.PasswordHash, user.Role, user.CreatedAt, user.UpdatedAt,
+	).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (db *Database) GetUser(ctx context.Context, id string) (models.User, error) {
 	var user models.User
 
 	err := db.Conn.QueryRow(ctx,
-		`SELECT id, username, email, first_name, last_name, created_at, updated_at
+		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role
 		FROM users
 		WHERE id = $1;`,
 		id,
-	).Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role)
 	if err != nil {
 		return user, err
 	}
@@ -51,26 +65,27 @@ func (db *Database) UpdateUser(ctx context.Context, ID string, user models.User)
 	return nil
 }
 
-func (db *Database) GetUsers(ctx context.Context) ([]models.User, error) {
+func (db *Database) GetUsers(ctx context.Context, page, limit int) ([]models.User, int, error) {
 	var users []models.User
 
 	rows, err := db.Conn.Query(ctx,
-		`SELECT id, username, email, first_name, last_name, created_at, updated_at
-		FROM users;`,
+		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role
+		FROM users
+		LIMIT $1 OFFSET $2;`,
+		limit, page,
 	)
 	if err != nil {
-		return users, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var user models.User
-		err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt)
-		if err != nil {
-			return users, err
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role); err != nil {
+			return nil, 0, err
 		}
 		users = append(users, user)
 	}
 
-	return users, nil
+	return users, len(users), nil
 }

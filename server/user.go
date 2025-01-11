@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/aakash-tyagi/linmed/models"
 	"github.com/gorilla/mux"
@@ -30,9 +31,10 @@ func (s *Server) AddUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// save to db
-	if err := s.db.AddUser(ctx, user); err != nil {
+	id, err := s.db.AddUser(ctx, user)
+	if err != nil {
 		s.Logger.Error("Failed to save user to db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -40,7 +42,7 @@ func (s *Server) AddUser(w http.ResponseWriter, r *http.Request) {
 		Id      uint   `json:"id"`
 		Message string `json:"message"`
 	}{
-		Id:      user.ID,
+		Id:      id,
 		Message: "User added successfully",
 	}
 
@@ -65,7 +67,7 @@ func (s *Server) GetUser(w http.ResponseWriter, r *http.Request) {
 	user, err := s.db.GetUser(ctx, id)
 	if err != nil {
 		s.Logger.Error("Failed to get user from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -107,12 +109,23 @@ func (s *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// update user in db
 	if err := s.db.UpdateUser(ctx, id, user); err != nil {
 		s.Logger.Error("Failed to update user in db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	ID, _ := strconv.Atoi(id)
+
+	res := struct {
+		Id      int    `json:"id"`
+		Message string `json:"message"`
+	}{
+		Id:      ID,
+		Message: "User updated successfully",
+	}
+
 	// return success
-	writeJSONResponse(w, http.StatusOK, "User updated successfully")
+	writeJSONResponse(w, http.StatusOK, res)
+
 }
 
 // get users
@@ -120,14 +133,23 @@ func (s *Server) UpdateUser(w http.ResponseWriter, r *http.Request) {
 func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	ctx := context.TODO()
 
+	page := r.URL.Query().Get("page")
+	limit := r.URL.Query().Get("limit")
+
+	pageInt, limitInt := s.validatePageLimit(page, limit)
+
 	// Get the users from the db
-	users, err := s.db.GetUsers(ctx)
+	users, totalUsers, err := s.db.GetUsers(ctx, pageInt, limitInt)
 	if err != nil {
 		s.Logger.Error("Failed to get users from db: ", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
+	res := paginatedResponse{
+		Total: totalUsers,
+		Data:  users,
+	}
 	// return the users
-	writeJSONResponse(w, http.StatusOK, users)
+	writeJSONResponse(w, http.StatusOK, res)
 }
