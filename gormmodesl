@@ -1,0 +1,193 @@
+package models
+
+import (
+	"database/sql"
+	"time"
+	"encoding/json"
+	"gorm.io/gorm"
+)
+
+// User Management Models
+type Role struct {
+	RoleID      uint      `gorm:"primaryKey;column:role_id"`
+	RoleName    string    `gorm:"unique;not null;column:role_name"`
+	Description string    `gorm:"column:description;type:text"`
+	CreatedAt   time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	Users       []User    `gorm:"foreignKey:RoleID"`
+	Permissions []Permission `gorm:"many2many:role_permissions"`
+}
+
+type Permission struct {
+	PermissionID   uint      `gorm:"primaryKey;column:permission_id"`
+	PermissionName string    `gorm:"unique;not null;column:permission_name"`
+	Description    string    `gorm:"column:description;type:text"`
+	CreatedAt      time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	Roles          []Role    `gorm:"many2many:role_permissions"`
+}
+
+type User struct {
+	UserID      uint           `gorm:"primaryKey;column:user_id"`
+	Email       string         `gorm:"unique;not null;column:email"`
+	PasswordHash string        `gorm:"column:password_hash"`
+	FirstName   string         `gorm:"column:first_name"`
+	LastName    string         `gorm:"column:last_name"`
+	RoleID      uint          `gorm:"column:role_id"`
+	IsActive    bool          `gorm:"column:is_active;default:true"`
+	LastLogin   sql.NullTime  `gorm:"column:last_login"`
+	CreatedAt   time.Time     `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	UpdatedAt   time.Time     `gorm:"column:updated_at;default:CURRENT_TIMESTAMP"`
+	Role        Role          `gorm:"foreignKey:RoleID"`
+}
+
+// Facility Management Models
+type Facility struct {
+	FacilityID    uint      `gorm:"primaryKey;column:facility_id"`
+	FacilityName  string    `gorm:"not null;column:facility_name"`
+	FacilityType  string    `gorm:"column:facility_type"`
+	Address       string    `gorm:"column:address;type:text"`
+	City          string    `gorm:"column:city"`
+	State         string    `gorm:"column:state"`
+	Country       string    `gorm:"column:country"`
+	PostalCode    string    `gorm:"column:postal_code"`
+	ContactPerson string    `gorm:"column:contact_person"`
+	ContactEmail  string    `gorm:"column:contact_email"`
+	ContactPhone  string    `gorm:"column:contact_phone"`
+	CreatedAt     time.Time `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	UpdatedAt     time.Time `gorm:"column:updated_at;default:CURRENT_TIMESTAMP"`
+	Floors        []Floor   `gorm:"foreignKey:FacilityID"`
+}
+
+type Floor struct {
+	FloorID     uint      `gorm:"primaryKey;column:floor_id"`
+	FacilityID  uint      `gorm:"column:facility_id"`
+	FloorNumber string    `gorm:"column:floor_number"`
+	FloorName   string    `gorm:"column:floor_name"`
+	FloorPlanURL string   `gorm:"column:floor_plan_url"`
+	Facility    Facility  `gorm:"foreignKey:FacilityID"`
+	Stations    []Station `gorm:"foreignKey:FloorID"`
+}
+
+type Station struct {
+	StationID   uint          `gorm:"primaryKey;column:station_id"`
+	FloorID     uint          `gorm:"column:floor_id"`
+	StationName string        `gorm:"column:station_name"`
+	StationType string        `gorm:"column:station_type"`
+	LocationX   float64       `gorm:"column:location_x"`
+	LocationY   float64       `gorm:"column:location_y"`
+	Status      string        `gorm:"column:status"`
+	CreatedAt   time.Time     `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	Floor       Floor         `gorm:"foreignKey:FloorID"`
+	Products    []StationProduct `gorm:"foreignKey:StationID"`
+}
+
+// Product Management Models
+type ProductCategory struct {
+	CategoryID       uint             `gorm:"primaryKey;column:category_id"`
+	CategoryName     string           `gorm:"not null;column:category_name"`
+	Description      string           `gorm:"column:description;type:text"`
+	ParentCategoryID *uint           `gorm:"column:parent_category_id"`
+	ParentCategory   *ProductCategory `gorm:"foreignKey:ParentCategoryID"`
+	Products         []Product        `gorm:"foreignKey:CategoryID"`
+}
+
+type Product struct {
+	ProductID          uint            `gorm:"primaryKey;column:product_id"`
+	CategoryID         uint            `gorm:"column:category_id"`
+	ProductName        string          `gorm:"not null;column:product_name"`
+	Description        string          `gorm:"column:description;type:text"`
+	Manufacturer       string          `gorm:"column:manufacturer"`
+	ModelNumber       string          `gorm:"column:model_number"`
+	SKU               string          `gorm:"unique;column:sku"`
+	ServiceIntervalDays int           `gorm:"column:service_interval_days"`
+	LifetimeMonths    int            `gorm:"column:lifetime_months"`
+	CreatedAt         time.Time       `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	UpdatedAt         time.Time       `gorm:"column:updated_at;default:CURRENT_TIMESTAMP"`
+	Category          ProductCategory `gorm:"foreignKey:CategoryID"`
+}
+
+type StationProduct struct {
+	StationProductID   uint      `gorm:"primaryKey;column:station_product_id"`
+	StationID          uint      `gorm:"column:station_id"`
+	ProductID          uint      `gorm:"column:product_id"`
+	SerialNumber       string    `gorm:"column:serial_number"`
+	InstallationDate   time.Time `gorm:"column:installation_date"`
+	ExpirationDate     time.Time `gorm:"column:expiration_date"`
+	NextInspectionDate time.Time `gorm:"column:next_inspection_date"`
+	NextServiceDate    time.Time `gorm:"column:next_service_date"`
+	Status             string    `gorm:"column:status"`
+	Notes              string    `gorm:"column:notes;type:text"`
+	Station            Station   `gorm:"foreignKey:StationID"`
+	Product            Product   `gorm:"foreignKey:ProductID"`
+}
+
+// Maintenance and Service Models
+type ServiceRecord struct {
+	ServiceID        uint           `gorm:"primaryKey;column:service_id"`
+	StationProductID uint           `gorm:"column:station_product_id"`
+	ServiceType      string         `gorm:"column:service_type"`
+	ServiceDate      time.Time      `gorm:"column:service_date"`
+	PerformedBy      uint           `gorm:"column:performed_by"`
+	Description      string         `gorm:"column:description;type:text"`
+	NextServiceDate  time.Time      `gorm:"column:next_service_date"`
+	Status           string         `gorm:"column:status"`
+	CreatedAt        time.Time      `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	StationProduct   StationProduct `gorm:"foreignKey:StationProductID"`
+	Performer        User           `gorm:"foreignKey:PerformedBy"`
+}
+
+// Alert Models
+type AlertType struct {
+	AlertTypeID uint    `gorm:"primaryKey;column:alert_type_id"`
+	AlertName   string  `gorm:"column:alert_name"`
+	Description string  `gorm:"column:description;type:text"`
+	Severity    string  `gorm:"column:severity"`
+	Alerts      []Alert `gorm:"foreignKey:AlertTypeID"`
+}
+
+type Alert struct {
+	AlertID          uint           `gorm:"primaryKey;column:alert_id"`
+	AlertTypeID      uint           `gorm:"column:alert_type_id"`
+	StationProductID uint           `gorm:"column:station_product_id"`
+	AlertMessage     string         `gorm:"column:alert_message;type:text"`
+	Status           string         `gorm:"column:status"`
+	CreatedAt        time.Time      `gorm:"column:created_at;default:CURRENT_TIMESTAMP"`
+	ResolvedAt       sql.NullTime   `gorm:"column:resolved_at"`
+	ResolvedBy       *uint          `gorm:"column:resolved_by"`
+	AlertType        AlertType      `gorm:"foreignKey:AlertTypeID"`
+	StationProduct   StationProduct `gorm:"foreignKey:StationProductID"`
+	Resolver         *User          `gorm:"foreignKey:ResolvedBy"`
+}
+
+// Order Management Models
+type Order struct {
+	OrderID    uint        `gorm:"primaryKey;column:order_id"`
+	FacilityID uint        `gorm:"column:facility_id"`
+	OrderedBy  uint        `gorm:"column:ordered_by"`
+	OrderDate  time.Time   `gorm:"column:order_date;default:CURRENT_TIMESTAMP"`
+	Status     string      `gorm:"column:status"`
+	TotalAmount float64    `gorm:"column:total_amount"`
+	Notes      string      `gorm:"column:notes;type:text"`
+	Facility   Facility    `gorm:"foreignKey:FacilityID"`
+	Orderer    User        `gorm:"foreignKey:OrderedBy"`
+	OrderItems []OrderItem `gorm:"foreignKey:OrderID"`
+}
+
+type OrderItem struct {
+	OrderItemID uint    `gorm:"primaryKey;column:order_item_id"`
+	OrderID     uint    `gorm:"column:order_id"`
+	ProductID   uint    `gorm:"column:product_id"`
+	Quantity    int     `gorm:"column:quantity"`
+	UnitPrice   float64 `gorm:"column:unit_price"`
+	Order       Order   `gorm:"foreignKey:OrderID"`
+	Product     Product `gorm:"foreignKey:ProductID"`
+}
+
+// Dashboard Preferences Model
+type DashboardPreference struct {
+	UserID      uint            `gorm:"primaryKey;column:user_id"`
+	WidgetID    string          `gorm:"primaryKey;column:widget_id"`
+	WidgetOrder int             `gorm:"column:widget_order"`
+	IsVisible   bool            `gorm:"column:is_visible;default:true"`
+	Settings    json.RawMessage `gorm:"column:settings;type:json"`
+	User        User            `gorm:"foreignKey:UserID"`
+}
