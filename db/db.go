@@ -106,6 +106,7 @@ func (db *Database) CreateTabels(ctx context.Context) error {
     		 id SERIAL PRIMARY KEY,
    			 name VARCHAR(100) NOT NULL,
              layout TEXT,
+			 plan TEXT,
    			 customer_id INT REFERENCES customers(id),
    			 created_at TIMESTAMP DEFAULT NOW(),
    			 updated_at TIMESTAMP DEFAULT NOW()

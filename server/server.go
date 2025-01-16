@@ -54,12 +54,26 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/customer/{id}", s.UpdateCustomer).Methods("PUT")
 	r.HandleFunc("/api/v1/customers", s.GetCustomers).Methods("GET")
 
+	r.HandleFunc("/api/v1/customer/{id}/floorplan", s.AddFloorPlan).Methods("POST")
+	r.HandleFunc("/api/v1/customer/{id}/floorplans", s.GetFloorPlans).Methods("GET")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}", s.GetFloorPlan).Methods("GET")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}", s.UpdateFloorPlan).Methods("PUT")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}", s.DeleteFloorPlan).Methods("DELETE")
+
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station", s.AddStation).Methods("POST")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.GetStationById).Methods("GET")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.UpdateStation).Methods("PUT")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.DeleteStation).Methods("DELETE")
+
+	r.HandleFunc("/api/v1/device", s.AddStationProduct).Methods("POST")           // Add a new device
+	r.HandleFunc("/api/v1/device/{id}", s.GetStationProductById).Methods("GET")   // Get a device by id
+	r.HandleFunc("/api/v1/device/{id}", s.UpdateStationProduct).Methods("PUT")    // Update a device by id
+	r.HandleFunc("/api/v1/device/{id}", s.DeleteStationProduct).Methods("DELETE") // Delete a device by id
 }
 
 func (s *Server) Start() {
 	r := mux.NewRouter()
 
-	// s.corsMiddleware(r)
 	s.RegisterRoutes(r)
 
 	// Apply CORS middleware

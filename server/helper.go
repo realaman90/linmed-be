@@ -59,3 +59,11 @@ func convertToInt(s string) int {
 	}
 	return i
 }
+
+func (s *Server) stringToUint(str string) (uint, error) {
+	i, err := strconv.Atoi(str)
+	if err != nil {
+		return 0, err
+	}
+	return uint(i), nil
+}
