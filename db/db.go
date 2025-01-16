@@ -137,7 +137,13 @@ func (db *Database) CreateTabels(ctx context.Context) error {
 		CREATE TABLE IF NOT EXISTS station_products (
     		 station_id INT REFERENCES stations(id) ON DELETE CASCADE,
    			 product_id INT REFERENCES products(id) ON DELETE CASCADE,
-   			 PRIMARY KEY (station_id, product_id)
+			 instalaltion_date TIMESTAMP,
+			 expiry_date TIMESTAMP,
+			 inspection_date TIMESTAMP,
+			 customer_id INT REFERENCES customers(id) ON DELETE CASCADE,
+			 created_at TIMESTAMP DEFAULT NOW(),
+			 updated_at TIMESTAMP DEFAULT NOW(),
+   			 PRIMARY KEY (station_id, product_id, customer_id)
 		);
 	`)
 	if err != nil {
