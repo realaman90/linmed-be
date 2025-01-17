@@ -13,9 +13,9 @@ type StationProduct struct {
 	UpdatedAt      time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
 	// Relations
-	Station  Station  `gorm:"foreignKey:StationID" json:"station"`
-	Product  Product  `gorm:"foreignKey:ProductID" json:"product"`
-	Customer Customer `gorm:"foreignKey:CustomerID" json:"customer"`
+	Station  *Station  `gorm:"foreignKey:StationID" json:"-"`
+	Product  *Product  `gorm:"foreignKey:ProductID" json:"-"`
+	Customer *Customer `gorm:"foreignKey:CustomerID" json:"-"`
 }
 
 func (sp *StationProduct) Validate() error {

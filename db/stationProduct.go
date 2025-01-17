@@ -21,7 +21,7 @@ func (db *Database) AddStationProduct(ctx context.Context, stationProduct models
 		inspection_date,
 		created_at,
 		updated_at)
-		VALUES ($1, $2, $3, $4)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id;`,
 		stationProduct.StationID, stationProduct.ProductID, stationProduct.InstalledDate, stationProduct.ExpiryDate, stationProduct.InspectionDate, stationProduct.CreatedAt, stationProduct.UpdatedAt,
 	).Scan(&id)

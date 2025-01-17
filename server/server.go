@@ -69,6 +69,10 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/device/{id}", s.GetStationProductById).Methods("GET")   // Get a device by id
 	r.HandleFunc("/api/v1/device/{id}", s.UpdateStationProduct).Methods("PUT")    // Update a device by id
 	r.HandleFunc("/api/v1/device/{id}", s.DeleteStationProduct).Methods("DELETE") // Delete a device by id
+
+	r.HandleFunc("/api/v1/dashboard", s.GetAllNumbers).Methods("GET")
+	r.HandleFunc("/api/v1/dashboard/tasks", s.GetTasks).Methods("GET")
+
 }
 
 func (s *Server) Start() {

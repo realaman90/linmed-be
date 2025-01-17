@@ -32,11 +32,11 @@ func (s *Database) GetFloorPlan(ctx context.Context, id string) (models.FloorPla
 	var floorPlan models.FloorPlan
 
 	err := s.Conn.QueryRow(ctx,
-		`SELECT id, name, layout, created_at, updated_at
+		`SELECT id, name, layout, customer_id,created_at, updated_at
 		FROM floor_plans
 		WHERE id = $1;`,
 		id,
-	).Scan(&floorPlan.ID, &floorPlan.Name, &floorPlan.Layout, &floorPlan.CreatedAt, &floorPlan.UpdatedAt)
+	).Scan(&floorPlan.ID, &floorPlan.Name, &floorPlan.Layout, &floorPlan.CustomerID, &floorPlan.CreatedAt, &floorPlan.UpdatedAt)
 	if err != nil {
 		return floorPlan, err
 	}
@@ -122,6 +122,7 @@ func (s *Database) GetFloorPlans(ctx context.Context, customerId uint, page, lim
 		if err := rows.Scan(&floorPlan.ID, &floorPlan.Name, &floorPlan.Layout, &floorPlan.CreatedAt, &floorPlan.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
+		floorPlan.CustomerID = customerId
 		floorPlans = append(floorPlans, floorPlan)
 	}
 
