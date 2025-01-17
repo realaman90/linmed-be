@@ -187,3 +187,44 @@ func (s *Server) DeleteStation(w http.ResponseWriter, r *http.Request) {
 
 	writeJSONResponse(w, http.StatusOK, res)
 }
+
+func (s *Server) GetStations(w http.ResponseWriter, r *http.Request) {
+
+	ctx := context.TODO()
+
+	page := r.URL.Query().Get("page")
+	limit := r.URL.Query().Get("limit")
+
+	// validate page and limit query parameters
+	pageInt, limitInt := s.validatePageLimit(page, limit)
+
+	// Get the customer id from the request
+	customerID := mux.Vars(r)["id"]
+	if customerID == "" {
+		s.Logger.Error("Customer id is required")
+		errorResposne(w, http.StatusBadRequest, "Customer id is required")
+		return
+	}
+
+	// Get the floor id from the request
+	floorId := mux.Vars(r)["floorPlanID"]
+	if floorId == "" {
+		s.Logger.Error("Floor id is required")
+		errorResposne(w, http.StatusBadRequest, "Floor id is required")
+		return
+	}
+
+	stations, total, err := s.db.GetStations(ctx, pageInt, limitInt, floorId, customerID)
+	if err != nil {
+		s.Logger.Error("Failed to get stations from db: ", err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	res := map[string]interface{}{
+		"total":    total,
+		"stations": stations,
+	}
+
+	writeJSONResponse(w, http.StatusOK, res)
+}

@@ -131,3 +131,44 @@ func (s *Server) DeleteStationProduct(w http.ResponseWriter, r *http.Request) {
 
 	writeJSONResponse(w, http.StatusOK, res)
 }
+
+func (s *Server) GetStationProducts(w http.ResponseWriter, r *http.Request) {
+
+	ctx := context.TODO()
+
+	limit := r.URL.Query().Get("limit")
+	page := r.URL.Query().Get("page")
+
+	// validate page and limit query parameters
+	pageInt, limitInt := s.validatePageLimit(page, limit)
+
+	//get the station id and customer id from the request
+	cusmtomerId := r.URL.Query().Get("customer_id")
+	stationId := r.URL.Query().Get("station_id")
+
+	if cusmtomerId == "" {
+		s.Logger.Error("Customer id is required")
+		errorResposne(w, http.StatusBadRequest, "Customer id is required")
+		return
+	}
+
+	if stationId == "" {
+		s.Logger.Error("Station id is required")
+		errorResposne(w, http.StatusBadRequest, "Station id is required")
+		return
+	}
+
+	stationProducts, total, err := s.db.GetStationProducts(ctx, pageInt, limitInt, cusmtomerId, stationId)
+	if err != nil {
+		s.Logger.Error("Failed to get devices from db: ", err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	res := map[string]interface{}{
+		"total": total,
+		"data":  stationProducts,
+	}
+
+	writeJSONResponse(w, http.StatusOK, res)
+}

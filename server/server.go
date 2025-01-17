@@ -61,11 +61,13 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}", s.DeleteFloorPlan).Methods("DELETE")
 
 	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station", s.AddStation).Methods("POST")
+	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/stations", s.GetStations).Methods("GET")
 	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.GetStationById).Methods("GET")
 	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.UpdateStation).Methods("PUT")
 	r.HandleFunc("/api/v1/customer/{id}/floorplan/{floorPlanID}/station/{stationID}", s.DeleteStation).Methods("DELETE")
 
 	r.HandleFunc("/api/v1/device", s.AddStationProduct).Methods("POST")           // Add a new device
+	r.HandleFunc("/api/v1/device", s.GetStationProducts).Methods("GET")           // Get all devices
 	r.HandleFunc("/api/v1/device/{id}", s.GetStationProductById).Methods("GET")   // Get a device by id
 	r.HandleFunc("/api/v1/device/{id}", s.UpdateStationProduct).Methods("PUT")    // Update a device by id
 	r.HandleFunc("/api/v1/device/{id}", s.DeleteStationProduct).Methods("DELETE") // Delete a device by id

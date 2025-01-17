@@ -73,3 +73,10 @@ func (db *Database) DeleteStation(ctx context.Context, ID string) error {
 
 	return nil
 }
+
+func (db *Database) GetStations(ctx context.Context, page, limit int, floorPlanId, customerId string) ([]models.Station, int, error) {
+
+	// var stations
+
+	return nil, 0, nil
+}

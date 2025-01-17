@@ -69,7 +69,7 @@ func (db *Database) GetUsers(ctx context.Context, page, limit int) ([]models.Use
 	var users []models.User
 
 	rows, err := db.Conn.Query(ctx,
-		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role
+		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role, profile_picture_url
 		FROM users
 		LIMIT $1 OFFSET $2;`,
 		limit, page,

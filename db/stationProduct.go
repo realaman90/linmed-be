@@ -76,3 +76,33 @@ func (db *Database) DeleteStationProduct(ctx context.Context, ID string) error {
 
 	return nil
 }
+
+func (db *Database) GetStationProducts(ctx context.Context, page, limit int, customerId, stationId string) ([]models.StationProduct, int, error) {
+	var stationProducts []models.StationProduct
+
+	rows, err := db.Conn.Query(ctx,
+		`SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date, created_at, updated_at
+		FROM station_products
+		WHERE station_id = $1
+		ORDER BY id
+		LIMIT $2 OFFSET $3;`,
+		stationId, limit, (page-1)*limit,
+	)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var stationProduct models.StationProduct
+		if err := rows.Scan(&stationProduct.ID, &stationProduct.StationID, &stationProduct.ProductID, &stationProduct.InstalledDate, &stationProduct.ExpiryDate, &stationProduct.InspectionDate, &stationProduct.CreatedAt, &stationProduct.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		stationProducts = append(stationProducts, stationProduct)
+	}
+
+	return stationProducts, len(stationProducts), nil
+
+}
