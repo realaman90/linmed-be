@@ -22,10 +22,11 @@ func (db *Database) AddUser(ctx context.Context, user models.User) (uint, error)
 		password_hash,
 		role,
 		created_at,
-		updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		updated_at,
+		profile_picture_url)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 		RETURNING id;`,
-		user.Username, user.Email, user.FirstName, user.LastName, user.PhoneNumber, user.IsActive, user.LastLogin, user.PasswordHash, user.Role, user.CreatedAt, user.UpdatedAt,
+		user.Username, user.Email, user.FirstName, user.LastName, user.PhoneNumber, user.IsActive, user.LastLogin, user.PasswordHash, user.Role, user.CreatedAt, user.UpdatedAt, user.ProfilePictureURL,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -38,11 +39,11 @@ func (db *Database) GetUser(ctx context.Context, id string) (models.User, error)
 	var user models.User
 
 	err := db.Conn.QueryRow(ctx,
-		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role
+		`SELECT id, username, email, first_name, last_name, created_at, updated_at, phone_number, is_active, last_login, role, profile_picture_url
 		FROM users
 		WHERE id = $1;`,
 		id,
-	).Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role)
+	).Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role, &user.ProfilePictureURL)
 	if err != nil {
 		return user, err
 	}
@@ -54,9 +55,9 @@ func (db *Database) UpdateUser(ctx context.Context, ID string, user models.User)
 
 	_, err := db.Conn.Exec(ctx,
 		`UPDATE users
-		SET username = $1, email = $2, first_name = $3, last_name = $4
-		WHERE id = $5;`,
-		user.Username, user.Email, user.FirstName, user.LastName, ID,
+		SET username = $1, email = $2, first_name = $3, last_name = $4, profile_picture_url = $5
+		WHERE id = $6;`,
+		user.Username, user.Email, user.FirstName, user.LastName, user.ProfilePictureURL, ID,
 	)
 	if err != nil {
 		return err
@@ -81,7 +82,7 @@ func (db *Database) GetUsers(ctx context.Context, page, limit int) ([]models.Use
 
 	for rows.Next() {
 		var user models.User
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role); err != nil {
+		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &user.FirstName, &user.LastName, &user.CreatedAt, &user.UpdatedAt, &user.PhoneNumber, &user.IsActive, &user.LastLogin, &user.Role, &user.ProfilePictureURL); err != nil {
 			return nil, 0, err
 		}
 		users = append(users, user)

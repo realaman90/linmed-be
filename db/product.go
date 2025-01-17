@@ -42,6 +42,35 @@ func (db *Database) GetCategory(ctx context.Context, id string) (models.Category
 	return category, nil
 }
 
+func (db *Database) UpdateCategory(ctx context.Context, id string, category models.Category) error {
+	_, err := db.Conn.Exec(ctx,
+		`UPDATE categories
+		SET name = $1, description = $2
+		WHERE id = $3;`,
+		category.Name,
+		category.Description,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) DeleteCategory(ctx context.Context, id string) error {
+	_, err := db.Conn.Exec(ctx,
+		`DELETE FROM categories
+		WHERE id = $1;`,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (db *Database) GetCategories(ctx context.Context) ([]models.Category, error) {
 	var categories []models.Category
 

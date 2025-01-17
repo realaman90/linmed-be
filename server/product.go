@@ -68,6 +68,80 @@ func (s *Server) GetCategories(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, http.StatusOK, res)
 }
 
+func (s *Server) UpdateCategory(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
+
+	// Get the category id from the request
+	id := mux.Vars(r)["id"]
+
+	// validate id
+	if id == "" {
+		s.Logger.Error("Category id is required")
+		writeJSONResponse(w, http.StatusBadRequest, "Category id is required")
+		return
+	}
+
+	category := models.Category{}
+
+	// Unmarshal the request body into the category struct
+	if err := json.NewDecoder(r.Body).Decode(&category); err != nil {
+		s.Logger.Error("Failed to decode request body: ", err)
+		writeJSONResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// validate category
+	if err := category.Validate(); err != nil {
+		s.Logger.Error("Failed to validate category: ", err)
+		writeJSONResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// update category in db
+	if err := s.db.UpdateCategory(ctx, id, category); err != nil {
+		s.Logger.Error("Failed to update category in db: ", err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	res := map[string]interface{}{
+		"id":      id,
+		"message": "Category updated successfully",
+	}
+
+	// return success
+	writeJSONResponse(w, http.StatusOK, res)
+}
+
+func (s *Server) DeleteCategory(w http.ResponseWriter, r *http.Request) {
+	ctx := context.TODO()
+
+	// Get the category id from the request
+	id := mux.Vars(r)["id"]
+
+	// validate id
+	if id == "" {
+		s.Logger.Error("Category id is required")
+		writeJSONResponse(w, http.StatusBadRequest, "Category id is required")
+		return
+	}
+
+	// delete category from db
+	if err := s.db.DeleteCategory(ctx, id); err != nil {
+		s.Logger.Error("Failed to delete category from db: ", err)
+		errorResposne(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	res := map[string]interface{}{
+		"id":      id,
+		"message": "Category deleted successfully",
+	}
+
+	// return success
+	writeJSONResponse(w, http.StatusOK, res)
+}
+
 func (s *Server) AddProduct(w http.ResponseWriter, r *http.Request) {
 
 	ctx := context.TODO()
