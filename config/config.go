@@ -9,6 +9,10 @@ import (
 type Config struct {
 	DBUrl      string
 	ServerPort string
+	Region     string
+	BucketName string
+	AccessId   string
+	AcessKey   string
 }
 
 func LoadConfig() (*Config, error) {
@@ -19,6 +23,10 @@ func LoadConfig() (*Config, error) {
 	config := Config{
 		DBUrl:      os.Getenv("DB_URL"),
 		ServerPort: os.Getenv("SERVER_PORT"),
+		Region:     os.Getenv("REGION"),
+		BucketName: os.Getenv("BUCKET"),
+		AccessId:   os.Getenv("AWS_ACCESS_KEY_ID"),
+		AcessKey:   os.Getenv("AWS_SECRET_ACCESS_KEY"),
 	}
 
 	return &config, nil

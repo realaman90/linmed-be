@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 
+	"github.com/aakash-tyagi/linmed/aws"
 	"github.com/aakash-tyagi/linmed/config"
 	database "github.com/aakash-tyagi/linmed/db"
 	"github.com/gorilla/handlers"
@@ -11,20 +12,23 @@ import (
 )
 
 type Server struct {
-	Config *config.Config
-	Logger *log.Logger
-	db     *database.Database
+	Config   *config.Config
+	Logger   *log.Logger
+	db       *database.Database
+	S3Client *aws.S3Client
 }
 
 func New(
 	config *config.Config,
 	log *log.Logger,
 	db *database.Database,
+	s3Client *aws.S3Client,
 ) *Server {
 	return &Server{
-		Config: config,
-		Logger: log,
-		db:     db,
+		Config:   config,
+		Logger:   log,
+		db:       db,
+		S3Client: s3Client,
 	}
 }
 
@@ -76,6 +80,9 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 
 	r.HandleFunc("/api/v1/dashboard", s.GetAllNumbers).Methods("GET")
 	r.HandleFunc("/api/v1/dashboard/tasks", s.GetTasks).Methods("GET")
+
+	r.HandleFunc("/api/v1/image", s.UploadImage).Methods("POST")
+	r.HandleFunc("/api/v1/image", s.GetImage).Methods("GET")
 
 }
 

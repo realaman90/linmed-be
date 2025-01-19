@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
+	"github.com/aakash-tyagi/linmed/aws"
 	"github.com/aakash-tyagi/linmed/config"
 	database "github.com/aakash-tyagi/linmed/db"
 	"github.com/aakash-tyagi/linmed/server"
@@ -24,7 +24,13 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(config.DBUrl)
+	// intialise s3 bucket
+
+	s3Client, err := aws.NewS3Client(config.Region, config.AccessId, config.AcessKey)
+	if err != nil {
+		logger.Fatal(err)
+		panic(err)
+	}
 
 	// create database connection
 	db, err := database.New(ctx, config.DBUrl)
@@ -42,6 +48,7 @@ func main() {
 		config,
 		logger,
 		db,
+		s3Client,
 	)
 
 	s.Start()
