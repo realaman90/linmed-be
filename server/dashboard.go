@@ -18,18 +18,68 @@ func (s *Server) GetAllNumbers(w http.ResponseWriter, r *http.Request) {
 	writeJSONResponse(w, http.StatusOK, numbers)
 }
 
-func (s *Server) GetTasks(w http.ResponseWriter, r *http.Request) {
-	ctx := context.TODO()
+func (s *Server) GetExpiryTasks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-	// get query month, week, day
-	period := r.URL.Query().Get("period")
-
-	tasks, err := s.db.GetUpcomingStaionWithTask(ctx, period)
-	if err != nil {
-		s.Logger.Error("Failed to get tasks from db: ", err)
-		errorResposne(w, http.StatusInternalServerError, err.Error())
+	startDate := r.URL.Query().Get("startDate")
+	if startDate == "" {
+		errorResposne(w, http.StatusBadRequest, "startDate is required")
 		return
 	}
 
-	writeJSONResponse(w, http.StatusOK, tasks)
+	endDate := r.URL.Query().Get("endDate")
+	if endDate == "" {
+		errorResposne(w, http.StatusBadRequest, "endDate is required")
+		return
+	}
+
+	// Get pagination parameters
+	page, limit := s.validatePageLimit(r.URL.Query().Get("page"), r.URL.Query().Get("limit"))
+
+	tasks, total, err := s.db.GetExpiringProducts(ctx, startDate, endDate, page, limit)
+	if err != nil {
+		s.Logger.WithError(err).Error("Failed to fetch expiring products")
+		errorResposne(w, http.StatusInternalServerError, "Failed to fetch expiring products")
+		return
+	}
+
+	res := paginatedResponse{
+		Total: total,
+		Data:  tasks,
+	}
+
+	writeJSONResponse(w, http.StatusOK, res)
+}
+
+func (s *Server) GetInspectionTasks(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	startDate := r.URL.Query().Get("startDate")
+	if startDate == "" {
+		errorResposne(w, http.StatusBadRequest, "startDate is required")
+		return
+	}
+
+	endDate := r.URL.Query().Get("endDate")
+	if endDate == "" {
+		errorResposne(w, http.StatusBadRequest, "endDate is required")
+		return
+	}
+
+	// Get pagination parameters
+	page, limit := s.validatePageLimit(r.URL.Query().Get("page"), r.URL.Query().Get("limit"))
+
+	tasks, total, err := s.db.GetInspectionTasks(ctx, startDate, endDate, page, limit)
+	if err != nil {
+		s.Logger.WithError(err).Error("Failed to fetch inspection tasks")
+		errorResposne(w, http.StatusInternalServerError, "Failed to fetch inspection tasks")
+		return
+	}
+
+	res := paginatedResponse{
+		Total: total,
+		Data:  tasks,
+	}
+
+	writeJSONResponse(w, http.StatusOK, res)
 }
