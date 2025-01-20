@@ -24,9 +24,10 @@ func (db *Database) GetAllNumbers(ctx context.Context) (models.Dashboard, error)
 	return dashboard, nil
 }
 
-func (db *Database) GetExpiringProducts(ctx context.Context, startDate, endDate string, page, limit int) ([]models.StationProduct, int, error) {
+func (db *Database) GetExpiringProducts(ctx context.Context, startDate, endDate string, page, limit int) ([]models.ExpiringProductResponse, int, error) {
 	var total int
-	var tasks []models.StationProduct
+
+	res := []models.ExpiringProductResponse{}
 
 	// Get total count
 	err := db.Conn.QueryRow(ctx, `
@@ -38,12 +39,15 @@ func (db *Database) GetExpiringProducts(ctx context.Context, startDate, endDate 
 		return nil, 0, fmt.Errorf("count query failed: %v", err)
 	}
 
-	// Get paginated results
-	query := `SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date, created_at, updated_at 
-			 FROM station_products 
-			 WHERE expiry_date BETWEEN $1 AND $2
-			 ORDER BY expiry_date ASC
-			 LIMIT $3 OFFSET $4`
+	// Get paginated results with customer and product details
+	query := `SELECT sp.id, sp.station_id, sp.product_id, sp.installation_date, sp.expiry_date, sp.inspection_date, sp.created_at, sp.updated_at,
+					 c.name AS customer_name, p.name AS product_name
+			  FROM station_products sp
+			  JOIN customers c ON sp.station_id = c.id
+			  JOIN products p ON sp.product_id = p.id
+			  WHERE sp.expiry_date BETWEEN $1 AND $2
+			  ORDER BY sp.expiry_date ASC
+			  LIMIT $3 OFFSET $4`
 
 	offset := (page - 1) * limit
 	rows, err := db.Conn.Query(ctx, query, startDate, endDate, limit, offset)
@@ -53,7 +57,7 @@ func (db *Database) GetExpiringProducts(ctx context.Context, startDate, endDate 
 	defer rows.Close()
 
 	for rows.Next() {
-		var task models.StationProduct
+		var task models.ExpiringProductResponse
 		err := rows.Scan(
 			&task.ID,
 			&task.StationID,
@@ -63,14 +67,16 @@ func (db *Database) GetExpiringProducts(ctx context.Context, startDate, endDate 
 			&task.InspectionDate,
 			&task.CreatedAt,
 			&task.UpdatedAt,
+			&task.CustomerName,
+			&task.ProductName,
 		)
 		if err != nil {
 			return nil, 0, err
 		}
-		tasks = append(tasks, task)
+		res = append(res, task)
 	}
 
-	return tasks, total, nil
+	return res, total, nil
 }
 
 func (db *Database) GetInspectionTasks(ctx context.Context, startDate, endDate string, page, limit int) ([]models.StationProduct, int, error) {

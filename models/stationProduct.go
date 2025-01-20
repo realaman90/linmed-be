@@ -21,3 +21,16 @@ type StationProduct struct {
 func (sp *StationProduct) Validate() error {
 	return validate.Struct(sp)
 }
+
+type ExpiringProductResponse struct {
+	ID             int       `json:"id"`
+	StationID      int       `json:"station_id"`
+	ProductID      int       `json:"product_id"`
+	InstalledDate  time.Time `json:"installed_date"`
+	ExpiryDate     time.Time `json:"expiry_date"`
+	InspectionDate time.Time `json:"inspection_date"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	CustomerName   string    `json:"customer_name"`
+	ProductName    string    `json:"product_name"`
+}
