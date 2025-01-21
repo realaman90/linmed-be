@@ -22,7 +22,7 @@ type User struct {
 	FirstName         string     `gorm:"size:50" json:"first_name" validate:"omitempty,max=50"`
 	LastName          string     `gorm:"size:50" json:"last_name" validate:"omitempty,max=50"`
 	PhoneNumber       *string    `gorm:"size:15" json:"phone_number" validate:"omitempty,e164"`
-	ProfilePictureURL *string    `gorm:"type:text" json:"profile_picture_url" validate:"omitempty,url"`
+	ProfilePictureURL *string    `gorm:"type:text" json:"profile_picture_url" validate:"omitempty"`
 	CreatedAt         time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt         time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 	IsActive          bool       `gorm:"default:true" json:"is_active"`
