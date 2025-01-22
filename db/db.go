@@ -3,26 +3,35 @@ package database
 import (
 	"context"
 	"fmt"
+	"time"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Database struct {
-	Conn *pgx.Conn
+	Conn *pgxpool.Pool
 }
 
 func New(ctx context.Context, dbUrl string) (*Database, error) {
+	config, err := pgxpool.ParseConfig(dbUrl)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse database config: %w", err)
+	}
 
-	dbconn, err := pgx.Connect(ctx, dbUrl)
+	config.MaxConns = 10
+	config.MinConns = 5
+	config.MaxConnLifetime = time.Minute * 5
+
+	dbpool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to database %s: %w", dbUrl, err)
 	}
 
-	if err := dbconn.Ping(ctx); err != nil {
+	if err := dbpool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("unable to ping database: %w", err)
 	}
 
-	return &Database{Conn: dbconn}, nil
+	return &Database{Conn: dbpool}, nil
 }
 
 func (db *Database) CreateTabels(ctx context.Context) error {
