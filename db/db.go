@@ -41,6 +41,7 @@ func (db *Database) CreateTabels(ctx context.Context) error {
 			id SERIAL PRIMARY KEY,
 			name VARCHAR(100) NOT NULL UNIQUE,
 			description TEXT,
+			color TEXT,
 			created_at TIMESTAMP DEFAULT NOW(),
 			updated_at TIMESTAMP DEFAULT NOW()
 		);
@@ -142,18 +143,23 @@ func (db *Database) CreateTabels(ctx context.Context) error {
 	}
 
 	_, err = db.Conn.Exec(ctx,
+
 		`
-		CREATE TABLE IF NOT EXISTS station_products (
-			 id SERIAL PRIMARY KEY,
-    		 station_id INT REFERENCES stations(id) ON DELETE CASCADE,
-   			 product_id INT REFERENCES products(id) ON DELETE CASCADE,
-			 installation_date TIMESTAMP,
-			 expiry_date TIMESTAMP,
-			 inspection_date TIMESTAMP,
-			 customer_id INT REFERENCES customers(id) ON DELETE CASCADE,
-			 created_at TIMESTAMP DEFAULT NOW(),
-			 updated_at TIMESTAMP DEFAULT NOW()
-		);
+	CREATE TABLE IF NOT EXISTS station_products (
+		 id SERIAL PRIMARY KEY,
+		 station_id INT REFERENCES stations(id) ON DELETE CASCADE,
+		 product_id INT REFERENCES products(id) ON DELETE CASCADE,
+		 installation_date TIMESTAMP,
+		 expiry_date TIMESTAMP,
+		 inspection_date TIMESTAMP,
+		 customer_id INT REFERENCES customers(id) ON DELETE CASCADE,
+		 child_product_1_id INT REFERENCES products(id) ON DELETE SET NULL,
+		 child_product_1_qty INT NOT NULL DEFAULT 0,
+		 child_product_2_id INT REFERENCES products(id) ON DELETE SET NULL,
+		 child_product_2_qty INT NOT NULL DEFAULT 0,
+		 created_at TIMESTAMP DEFAULT NOW(),
+		 updated_at TIMESTAMP DEFAULT NOW()
+	);
 	`)
 	if err != nil {
 		return err

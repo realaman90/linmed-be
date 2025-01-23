@@ -33,10 +33,12 @@ func (s *Server) GetExpiryTasks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	customerId := r.URL.Query().Get("customerId")
+
 	// Get pagination parameters
 	page, limit := s.validatePageLimit(r.URL.Query().Get("page"), r.URL.Query().Get("limit"))
 
-	tasks, total, err := s.db.GetExpiringProducts(ctx, startDate, endDate, page, limit)
+	tasks, total, err := s.db.GetExpiringProducts(ctx, startDate, endDate, customerId, page, limit)
 	if err != nil {
 		s.Logger.WithError(err).Error("Failed to fetch expiring products")
 		errorResposne(w, http.StatusInternalServerError, "Failed to fetch expiring products")

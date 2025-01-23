@@ -38,7 +38,7 @@ func main() {
 		panic(err)
 	}
 
-	defer db.Conn.Close(ctx)
+	defer db.Conn.Close()
 	// Proceed with table creation or other logic
 	if err := db.CreateTabels(ctx); err != nil {
 		log.Fatalf("Failed to create tables: %v", err)

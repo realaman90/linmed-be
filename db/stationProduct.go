@@ -8,8 +8,6 @@ import (
 
 func (db *Database) AddStationProduct(ctx context.Context, stationProduct models.StationProduct) (int, error) {
 
-	// return id of the stationProduct
-
 	var id int
 
 	err := db.Conn.QueryRow(ctx,
@@ -19,11 +17,21 @@ func (db *Database) AddStationProduct(ctx context.Context, stationProduct models
 		installation_date,
 		expiry_date,
 		inspection_date,
+		child_product_1_id,
+		child_product_1_qty,
+		child_product_2_id,
+		child_product_2_qty,
 		created_at,
 		updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id;`,
-		stationProduct.StationID, stationProduct.ProductID, stationProduct.InstalledDate, stationProduct.ExpiryDate, stationProduct.InspectionDate, stationProduct.CreatedAt, stationProduct.UpdatedAt,
+		stationProduct.StationID, stationProduct.ProductID,
+		stationProduct.InstalledDate, stationProduct.ExpiryDate,
+		stationProduct.InspectionDate, stationProduct.ChildProduct1ID,
+		stationProduct.ChildProduct1Qty, stationProduct.ChildProduct2ID,
+		stationProduct.ChildProduct2Qty,
+		stationProduct.CreatedAt,
+		stationProduct.UpdatedAt,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -36,11 +44,21 @@ func (db *Database) GetStationProductById(ctx context.Context, id string) (model
 	var stationProduct models.StationProduct
 
 	err := db.Conn.QueryRow(ctx,
-		`SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date, created_at, updated_at
+		`SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date,
+		child_product_1_id,
+		child_product_1_qty,
+		child_product_2_id,
+		child_product_1_qty,
+		created_at, updated_at
 		FROM station_products
 		WHERE id = $1;`,
 		id,
-	).Scan(&stationProduct.ID, &stationProduct.StationID, &stationProduct.ProductID, &stationProduct.InstalledDate, &stationProduct.ExpiryDate, &stationProduct.InspectionDate, &stationProduct.CreatedAt, &stationProduct.UpdatedAt)
+	).Scan(&stationProduct.ID, &stationProduct.StationID, &stationProduct.ProductID, &stationProduct.InstalledDate, &stationProduct.ExpiryDate, &stationProduct.InspectionDate,
+		&stationProduct.ChildProduct1ID,
+		&stationProduct.ChildProduct1Qty,
+		&stationProduct.ChildProduct2ID,
+		&stationProduct.ChildProduct2Qty,
+		&stationProduct.CreatedAt, &stationProduct.UpdatedAt)
 	if err != nil {
 		return stationProduct, err
 	}
@@ -53,8 +71,17 @@ func (db *Database) UpdateStationProduct(ctx context.Context, ID string, station
 	_, err := db.Conn.Exec(ctx,
 		`UPDATE station_products
 		SET station_id = $1, product_id = $2, installation_date = $3, expiry_date = $4, inspection_date = $5
-		WHERE id = $6;`,
-		stationProduct.StationID, stationProduct.ProductID, stationProduct.InstalledDate, stationProduct.ExpiryDate, stationProduct.InspectionDate, ID,
+		child_product_1_id = $6,
+		child_product_1_qty = $7,
+		child_product_2_id = $8,
+		child_product_1_qty = $9,
+		WHERE id = $10;`,
+		stationProduct.StationID, stationProduct.ProductID, stationProduct.InstalledDate, stationProduct.ExpiryDate, stationProduct.InspectionDate,
+		stationProduct.ChildProduct1,
+		stationProduct.ChildProduct1Qty,
+		stationProduct.ChildProduct2ID,
+		stationProduct.ChildProduct2Qty,
+		ID,
 	)
 	if err != nil {
 		return err
@@ -81,7 +108,12 @@ func (db *Database) GetStationProducts(ctx context.Context, page, limit int, cus
 	var stationProducts []models.StationProduct
 
 	rows, err := db.Conn.Query(ctx,
-		`SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date, created_at, updated_at
+		`SELECT id, station_id, product_id, installation_date, expiry_date, inspection_date,
+		child_product_1_id,
+		child_product_1_qty,
+		child_product_2_id,
+		child_product_1_qty,
+		created_at, updated_at
 		FROM station_products
 		WHERE station_id = $1
 		ORDER BY id
@@ -97,7 +129,12 @@ func (db *Database) GetStationProducts(ctx context.Context, page, limit int, cus
 
 	for rows.Next() {
 		var stationProduct models.StationProduct
-		if err := rows.Scan(&stationProduct.ID, &stationProduct.StationID, &stationProduct.ProductID, &stationProduct.InstalledDate, &stationProduct.ExpiryDate, &stationProduct.InspectionDate, &stationProduct.CreatedAt, &stationProduct.UpdatedAt); err != nil {
+		if err := rows.Scan(&stationProduct.ID, &stationProduct.StationID, &stationProduct.ProductID, &stationProduct.InstalledDate, &stationProduct.ExpiryDate, &stationProduct.InspectionDate,
+			&stationProduct.ChildProduct1ID,
+			&stationProduct.ChildProduct1Qty,
+			&stationProduct.ChildProduct2ID,
+			&stationProduct.ChildProduct2Qty,
+			&stationProduct.CreatedAt, &stationProduct.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
 		stationProducts = append(stationProducts, stationProduct)

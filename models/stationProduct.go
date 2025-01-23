@@ -12,10 +12,23 @@ type StationProduct struct {
 	CreatedAt      time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 
+	// Child product references (for two child products)
+	ChildProduct1ID  *uint `gorm:"index" json:"child_product_1_id" validate:"omitempty"`
+	ChildProduct1Qty *int  `gorm:"not null;default:0" json:"child_product_1_qty" validate:"omitempty,gte=0"`
+
+	ChildProduct2ID  *uint `gorm:"index" json:"child_product_2_id" validate:"omitempty"`
+	ChildProduct2Qty *int  `gorm:"not null;default:0" json:"child_product_2_qty" validate:"omitempty,gte=0"`
+
 	// Relations
 	Station  *Station  `gorm:"foreignKey:StationID" json:"-"`
 	Product  *Product  `gorm:"foreignKey:ProductID" json:"-"`
 	Customer *Customer `gorm:"foreignKey:CustomerID" json:"-"`
+
+	ChildProduct1 *Product `gorm:"foreignKey:ChildProduct1ID" json:"-"`
+	ChildProduct2 *Product `gorm:"foreignKey:ChildProduct2ID" json:"-"`
+
+	CustomerName string `json:"customer_name"`
+	ProductName  string `json:"product_name"`
 }
 
 func (sp *StationProduct) Validate() error {
