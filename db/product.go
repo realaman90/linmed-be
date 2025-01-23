@@ -77,7 +77,7 @@ func (db *Database) GetCategories(ctx context.Context) ([]models.Category, error
 	var categories []models.Category
 
 	rows, err := db.Conn.Query(ctx,
-		`SELECT id, name, description,created_at, updated_at
+		`SELECT id, name, description,color,created_at, updated_at
 		FROM categories;`,
 	)
 	if err != nil {
