@@ -6,15 +6,15 @@ resource "aws_vpc" "lenmed-dev" {
 
 resource "aws_subnet" "sn1-lenmed-dev" {
   cidr_block = "192.168.0.0/24"
-  vpc_id = aws_vpc.lenmed-dev
+  vpc_id = aws_vpc.lenmed-dev.id
   availability_zone = "eu-north-1a"
   map_public_ip_on_launch = true
 }
 
 resource "aws_subnet" "sn2-lenmed-dev" {
-    cidr_block = "192.168.0.0/24"
-    vpc_id = aws_vpc.lenmed-dev
-    availability_zone = "eu-north-1a"
+    cidr_block = "192.168.1.0/24"
+    vpc_id = aws_vpc.lenmed-dev.id
+    availability_zone = "eu-north-1b"
     map_public_ip_on_launch = true
 } 
 

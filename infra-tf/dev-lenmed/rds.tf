@@ -1,13 +1,13 @@
 resource "aws_db_instance" "lenmed_db" {
   identifier        = "lenmed-db-instance"
   engine            = "postgres"
-  engine_version    = "13.4"  
+  engine_version    = "16"  
   instance_class    = "db.t3.micro"  # Choose an instance type
   allocated_storage = 5  # GB, adjust as necessary
   storage_type      = "gp2"
-  db_name           = "lenmeddb"  # Your database name
-  username          = "admin"  # Your admin username
-  password          = "your-secure-password"  # Your admin password
+  db_name           = "lenmed_db"  # Your database name
+  username          = "lenmed"  # Your admin username
+  password          = "lenmed123"  # Your admin password
   parameter_group_name = "default.postgres13"  # PostgreSQL version
   multi_az          = false  # Set to true for multi-AZ deployment for high availability
   publicly_accessible = false  # Set to true if the DB should be publicly accessible

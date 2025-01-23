@@ -26,13 +26,26 @@ resource "aws_security_group" "sg-lenmed-dev" {
     cidr_blocks = ["0.0.0.0/0"]  # Consider restricting to your IP address for extra security.
   }
 
-  # Allow PostgreSQL access from the EC2 instance (restricted to EC2 SG)
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# Security Group for RDS
+resource "aws_security_group" "sg-lenmed-rds" {
+  name   = "security-group-lenmed-rds"
+  vpc_id = aws_vpc.lenmed-dev.id
+
   ingress {
     description = "PostgreSQL"
     from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
-    security_groups = [aws_security_group.sg-lenmed-dev.id]  # Only EC2 can access RDS
+    security_groups = [aws_security_group.sg-lenmed-dev.id]  # Allow EC2 to access RDS
   }
 
   egress {
