@@ -165,5 +165,15 @@ func (db *Database) CreateTabels(ctx context.Context) error {
 		return err
 	}
 
+	_, err = db.Conn.Exec(ctx,
+		`
+	ALTER TABLE station_products 
+		ADD COLUMN IF NOT EXISTS product_name VARCHAR(100),
+		ADD COLUMN IF NOT EXISTS customer_name VARCHAR(100);
+	`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -22,8 +22,10 @@ func (db *Database) AddStationProduct(ctx context.Context, stationProduct models
 		child_product_2_id,
 		child_product_2_qty,
 		created_at,
-		updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		updated_at,
+		product_name,
+		customer_name)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,$12,$13)
 		RETURNING id;`,
 		stationProduct.StationID, stationProduct.ProductID,
 		stationProduct.InstalledDate, stationProduct.ExpiryDate,
@@ -32,6 +34,8 @@ func (db *Database) AddStationProduct(ctx context.Context, stationProduct models
 		stationProduct.ChildProduct2Qty,
 		stationProduct.CreatedAt,
 		stationProduct.UpdatedAt,
+		stationProduct.ProductName,
+		stationProduct.CustomerName,
 	).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -113,7 +117,8 @@ func (db *Database) GetStationProducts(ctx context.Context, page, limit int, cus
 		child_product_1_qty,
 		child_product_2_id,
 		child_product_1_qty,
-		created_at, updated_at
+		created_at, updated_at,
+		product_name, customer_name
 		FROM station_products
 		WHERE station_id = $1
 		ORDER BY id
@@ -134,7 +139,8 @@ func (db *Database) GetStationProducts(ctx context.Context, page, limit int, cus
 			&stationProduct.ChildProduct1Qty,
 			&stationProduct.ChildProduct2ID,
 			&stationProduct.ChildProduct2Qty,
-			&stationProduct.CreatedAt, &stationProduct.UpdatedAt); err != nil {
+			&stationProduct.CreatedAt, &stationProduct.UpdatedAt,
+			&stationProduct.ProductName, &stationProduct.CustomerName); err != nil {
 			return nil, 0, err
 		}
 		stationProducts = append(stationProducts, stationProduct)

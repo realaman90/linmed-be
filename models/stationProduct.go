@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type StationProduct struct {
 	ID             uint      `gorm:"primaryKey;autoIncrement" json:"id"`
@@ -27,8 +29,8 @@ type StationProduct struct {
 	ChildProduct1 *Product `gorm:"foreignKey:ChildProduct1ID" json:"-"`
 	ChildProduct2 *Product `gorm:"foreignKey:ChildProduct2ID" json:"-"`
 
-	CustomerName string `json:"customer_name"`
-	ProductName  string `json:"product_name"`
+	ProductName  string `json:"product_name,omitempty"`
+	CustomerName string `json:"customer_name,omitempty"`
 }
 
 func (sp *StationProduct) Validate() error {
