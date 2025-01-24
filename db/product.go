@@ -231,12 +231,29 @@ func (db *Database) GetProducts(ctx context.Context, page, limit int) ([]models.
 		}
 	}
 
+	// Ensure to include nested children
+	for i := range result {
+		result[i].Children = getNestedChildren(productMap, result[i])
+	}
+
 	return result, total, nil
 }
 
 // Helper function to create a pointer from uint
 func uintPtr(i uint) *uint {
 	return &i
+}
+
+// Helper function to get nested children
+func getNestedChildren(productMap map[uint]*models.Product, parent models.Product) []models.Product {
+	var children []models.Product
+	for _, product := range productMap {
+		if product.ParentID != nil && *product.ParentID == parent.ID {
+			children = append(children, *product)
+			product.Children = getNestedChildren(productMap, *product) // Recursively get nested children
+		}
+	}
+	return children
 }
 
 // Helper function to get child products
