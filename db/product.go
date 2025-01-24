@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/aakash-tyagi/linmed/models"
 )
@@ -73,27 +74,29 @@ func (db *Database) DeleteCategory(ctx context.Context, id string) error {
 	return nil
 }
 
-func (db *Database) GetCategories(ctx context.Context) ([]models.Category, error) {
+func (db *Database) GetCategories(ctx context.Context) (models.CategoriesResponse, error) {
 	var categories []models.Category
 
-	rows, err := db.Conn.Query(ctx,
-		`SELECT id, name, description,color,created_at, updated_at
-		FROM categories;`,
-	)
+	rows, err := db.Conn.Query(ctx, `
+		SELECT c.id, c.name, c.description, c.color, c.created_at, c.updated_at, COUNT(p.id) as product_count
+		FROM categories c
+		LEFT JOIN products p ON p.category_id = c.id
+		GROUP BY c.id`)
 	if err != nil {
-		return nil, err
+		return models.CategoriesResponse{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		var category models.Category
-		if err := rows.Scan(&category.ID, &category.Name, &category.Description, &category.Color, &category.CreatedAt, &category.UpdatedAt); err != nil {
-			return nil, err
+		if err := rows.Scan(&category.ID, &category.Name, &category.Description, &category.Color,
+			&category.CreatedAt, &category.UpdatedAt, &category.ProductCount); err != nil {
+			return models.CategoriesResponse{}, err
 		}
 		categories = append(categories, category)
 	}
 
-	return categories, nil
+	return models.CategoriesResponse{Categories: categories}, nil
 }
 
 func (db *Database) AddProduct(ctx context.Context, product models.Product) (uint, error) {
@@ -168,57 +171,99 @@ func (db *Database) GetProduct(ctx context.Context, id string) (models.Product, 
 }
 
 func (db *Database) GetProducts(ctx context.Context, page, limit int) ([]models.Product, int, error) {
-	var products []models.Product
-	productMap := make(map[uint]*models.Product) // Map to hold products by ID for nesting
 
-	// Query all products with their categories and pagination
+	var total int
+
+	// Get total count of products
+	err := db.Conn.QueryRow(ctx, "SELECT COUNT(*) FROM products").Scan(&total)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch all products, including parent-child relations
 	rows, err := db.Conn.Query(ctx,
-		`SELECT p.id, p.name, p.category_id, c.name AS category_name, p.price, p.description, 
-		        p.image_url, p.parent_id, p.coverage_amount, p.age_limit, p.created_at, p.updated_at
-		FROM products p
-		LEFT JOIN categories c ON p.category_id = c.id
-		LIMIT $1 OFFSET $2;`,
-		limit, (page-1)*limit,
-	)
+		`SELECT p.id, p.name, p.category_id, c.name as category_name, p.price, p.description, 
+                p.image_url, p.parent_id, p.coverage_amount, p.age_limit, 
+                p.created_at, p.updated_at
+		 FROM products p
+		 LEFT JOIN categories c ON p.category_id = c.id
+		 ORDER BY p.id
+		 LIMIT $1 OFFSET $2`, limit, (page-1)*limit)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
+	// Map to store products by ID
+	productMap := make(map[uint]*models.Product)
+
+	// Process query results
 	for rows.Next() {
-		var product models.Product
-		if err := rows.Scan(
-			&product.ID, &product.Name, &product.CategoryID, &product.CategoryName,
-			&product.Price, &product.Description, &product.ImageURL, &product.ParentID,
-			&product.CoverageAmount, &product.AgeLimit, &product.CreatedAt, &product.UpdatedAt,
-		); err != nil {
+		var p models.Product
+		var parentID sql.NullInt64
+
+		if err := rows.Scan(&p.ID, &p.Name, &p.CategoryID, &p.CategoryName, &p.Price, &p.Description,
+			&p.ImageURL, &parentID, &p.CoverageAmount, &p.AgeLimit, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, 0, err
 		}
-		// Add product to the map for nesting
-		productMap[product.ID] = &product
-		products = append(products, product)
+
+		// Set ParentID properly
+		if parentID.Valid {
+			p.ParentID = uintPtr(uint(parentID.Int64))
+		}
+
+		// Store the product in the map
+		productMap[p.ID] = &p
 	}
 
-	// Nest child products under their respective parent products
-	for _, product := range products {
+	// Construct parent-child relationships
+	var result []models.Product
+	for _, product := range productMap {
 		if product.ParentID != nil {
-			if parent, exists := productMap[*product.ParentID]; exists {
-				parent.Children = append(parent.Children, product) // Nest child under parent
+			// If the product has a parent, add it to its parent's children
+			parentProduct := productMap[*product.ParentID]
+			if parentProduct != nil {
+				parentProduct.Children = append(parentProduct.Children, *product)
 			}
+		} else {
+			// If no parent, add to the main list
+			result = append(result, *product)
 		}
 	}
 
-	// Get the total count of products for pagination
-	var totalCount int
-	err = db.Conn.QueryRow(ctx,
-		`SELECT COUNT(*) FROM products;`,
-	).Scan(&totalCount)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return products, totalCount, nil
+	return result, total, nil
 }
+
+// Helper function to create a pointer from uint
+func uintPtr(i uint) *uint {
+	return &i
+}
+
+// Helper function to get child products
+// func (db *Database) getChildren(ctx context.Context, parentID uint) ([]models.Product, error) {
+// 	var children []models.Product
+
+// 	rows, err := db.Conn.Query(ctx,
+// 		`SELECT id, name, category_id, price, description, image_url, parent_id, coverage_amount, age_limit, created_at, updated_at
+// 		 FROM products
+// 		 WHERE parent_id = $1
+// 		 ORDER BY id`, parentID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer rows.Close()
+
+// 	for rows.Next() {
+// 		var p models.Product
+// 		if err := rows.Scan(&p.ID, &p.Name, &p.CategoryID, &p.Price, &p.Description, &p.ImageURL,
+// 			&p.ParentID, &p.CoverageAmount, &p.AgeLimit, &p.CreatedAt, &p.UpdatedAt); err != nil {
+// 			return nil, err
+// 		}
+// 		children = append(children, p)
+// 	}
+
+// 	return children, nil
+// }
 
 func (db *Database) UpdateProduct(ctx context.Context, product models.Product) error {
 

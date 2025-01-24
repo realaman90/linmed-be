@@ -6,15 +6,6 @@ import (
 
 // Product Model
 
-type Category struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name        string    `gorm:"size:100;not null" json:"name" validate:"required"`
-	Description string    `gorm:"type:text" json:"description" validate:"required"`
-	Color       string    `gorm:"type:text" json:"color" validate:"required"`
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-}
-
 func (c *Category) Validate() error {
 	return validate.Struct(c)
 }
@@ -37,4 +28,15 @@ type Product struct {
 
 func (p *Product) Validate() error {
 	return validate.Struct(p)
+}
+
+type CategoryProducts struct {
+	CategoryID   uint      `json:"category_id"`
+	CategoryName string    `json:"category_name"`
+	Products     []Product `json:"products"`
+}
+
+type CategoryProductsResponse struct {
+	Categories []CategoryProducts `json:"categories"`
+	TotalCount int                `json:"total_count"`
 }

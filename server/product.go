@@ -59,13 +59,13 @@ func (s *Server) GetCategories(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := paginatedResponse{
-		Total: len(categories),
-		Data:  categories,
-	}
+	// res := paginatedResponse{
+	// 	Total: len(categories),
+	// 	Data:  categories,
+	// }
 
 	// return success
-	writeJSONResponse(w, http.StatusOK, res)
+	writeJSONResponse(w, http.StatusOK, categories)
 }
 
 func (s *Server) UpdateCategory(w http.ResponseWriter, r *http.Request) {
