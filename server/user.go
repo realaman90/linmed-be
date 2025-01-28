@@ -153,3 +153,24 @@ func (s *Server) GetUsers(w http.ResponseWriter, r *http.Request) {
 	// return the users
 	writeJSONResponse(w, http.StatusOK, res)
 }
+
+
+//delete user
+func (s *Server) DeleteUser(w http.ResponseWriter, r *http.Request) {
+    ctx := context.TODO()
+    id := mux.Vars(r)["id"]
+
+    if id == "" {
+        writeJSONResponse(w, http.StatusBadRequest, "User ID required")
+        return
+    }
+
+    if err := s.db.DeleteUser(ctx, id); err != nil {
+        writeJSONResponse(w, http.StatusInternalServerError, err.Error())
+        return
+    }
+
+    writeJSONResponse(w, http.StatusOK, map[string]string{
+        "message": "User deleted successfully",
+    })
+}
