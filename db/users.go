@@ -55,9 +55,9 @@ func (db *Database) UpdateUser(ctx context.Context, ID string, user models.User)
 
 	_, err := db.Conn.Exec(ctx,
 		`UPDATE users
-		SET username = $1, email = $2, first_name = $3, last_name = $4, profile_picture_url = $5
-		WHERE id = $6;`,
-		user.Username, user.Email, user.FirstName, user.LastName, user.ProfilePictureURL, ID,
+		SET username = $1, email = $2, first_name = $3, last_name = $4, profile_picture_url = $5,phone_number = $6
+		WHERE id = $7;`,
+		user.Username, user.Email, user.FirstName, user.LastName, user.ProfilePictureURL,user.PhoneNumber, ID,
 	)
 	if err != nil {
 		return err
@@ -89,4 +89,17 @@ func (db *Database) GetUsers(ctx context.Context, page, limit int) ([]models.Use
 	}
 
 	return users, len(users), nil
+}
+
+func (db *Database) DeleteUser(ctx context.Context, id string) error {
+    _, err := db.Conn.Exec(ctx,
+        `DELETE FROM users 
+        WHERE id = $1;`,
+        id,
+    )
+    if err != nil {
+        return err
+    }
+    
+    return nil
 }

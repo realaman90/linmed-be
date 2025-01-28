@@ -43,6 +43,7 @@ func (s *Server) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/api/v1/user/{id}", s.GetUser).Methods("GET")
 	r.HandleFunc("/api/v1/user/{id}", s.UpdateUser).Methods("PUT")
 	r.HandleFunc("/api/v1/users", s.GetUsers).Methods("GET")
+	r.HandleFunc("/api/v1/user/{id}", s.DeleteUser).Methods("DELETE")
 
 	r.HandleFunc("/api/v1/category", s.AddCategory).Methods("POST")
 	r.HandleFunc("/api/v1/category", s.GetCategories).Methods("GET")
